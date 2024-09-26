@@ -4,8 +4,10 @@
 #include <algorithm>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <cctype>
 #include <curl/curl.h>
+#include <set>
 
 using namespace std;
 
@@ -55,7 +57,7 @@ string removeHTMLTags(const string& content) {
 }
 
 // Function to process the web page content and count words
-void countWords(const string& content, map<string, int>& wordCount) {
+void countWords(const string& content, map<string, int>& wordCount, const set<std::string> wordSet) {
     stringstream ss(content);
     string word;
 
@@ -63,9 +65,12 @@ void countWords(const string& content, map<string, int>& wordCount) {
         // Remove punctuation and convert to lowercase
         word.erase(remove_if(word.begin(), word.end(), ::ispunct), word.end());
         transform(word.begin(), word.end(), word.begin(), ::tolower);
-        if (!word.empty()) {
-            wordCount[word]++;
+        if(!(wordSet.find(word) == wordSet.end())){
+            if (!word.empty()) {
+                wordCount[word]++;
         }
+        }
+
     }
 }
 
@@ -106,9 +111,17 @@ int main() {
     // Remove HTML tags from the fetched content
     string cleanContent = removeHTMLTags(content);
 
+    std::set<std::string> setOfWords;
+    std::ifstream inputFile("words.txt");
+    std::string line;
+    while (std::getline(inputFile, line)) {
+        setOfWords.insert(line);
+    }
+    inputFile.close();
+
     // Word counting
     map<string, int> wordCount;
-    countWords(cleanContent, wordCount);
+    countWords(cleanContent, wordCount, setOfWords);
 
     cout << "\nWord counts (ascending order):" << endl;
     displayWordCounts(wordCount);
